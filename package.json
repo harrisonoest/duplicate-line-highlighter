@@ -1,0 +1,70 @@
+{
+  "name": "duplicate-line-highlighter",
+  "displayName": "Duplicate Line Highlighter",
+  "description": "Shows duplicate lines in the editor.",
+  "version": "1.0.0",
+  "publisher": "<your-publisher-id>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harrisonoest/duplicate-line-highlighter.git"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:duplicate-line-highlighter.toggleDuplicateLineHighlight"
+  ],
+  "main": "./duplicate-line-highlighter.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "duplicate-line-highlighter.toggleDuplicateLineHighlight",
+        "title": "Toggle Duplicate Line Highlight"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "duplicate-line-highlighter.toggleDuplicateLineHighlight",
+        "key": "ctrl+shift+d",
+        "mac": "cmd+shift+d"
+      }
+    ],
+    "configuration": {
+      "title": "Duplicate Line Highlighter",
+      "properties": {
+        "duplicateLineHighlighter.highlightColors": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [
+            "rgba(255, 0, 0, 0.2)",
+            "rgba(0, 128, 255, 0.2)",
+            "rgba(255, 165, 0, 0.2)",
+            "rgba(0, 200, 100, 0.2)",
+            "rgba(180, 0, 255, 0.2)",
+            "rgba(255, 255, 0, 0.2)",
+            "rgba(0, 200, 200, 0.2)",
+            "rgba(255, 100, 150, 0.2)"
+          ],
+          "description": "Color palette for duplicate line groups. Each group of duplicates gets a distinct color, cycling through this list."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.93.0",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "20.x",
+    "eslint": "^9.9.1",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1"
+  }
+}
