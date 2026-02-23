@@ -1,9 +1,9 @@
-const vscode = require('vscode');
+import * as vscode from 'vscode';
 
-let decorationTypes = [];
+let decorationTypes: vscode.TextEditorDecorationType[] = [];
 let isHighlightActive = false;
-let debounceTimer;
-let outputChannel;
+let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+let outputChannel: vscode.OutputChannel;
 
 const DEFAULT_PALETTE = [
     'rgba(255, 0, 0, 0.2)',
@@ -16,11 +16,11 @@ const DEFAULT_PALETTE = [
     'rgba(255, 100, 150, 0.2)',
 ];
 
-function createDecorationTypes() {
+function createDecorationTypes(): void {
     decorationTypes.forEach((d) => d.dispose());
     const palette = vscode.workspace
         .getConfiguration('duplicateLineHighlighter')
-        .get('highlightColors', DEFAULT_PALETTE);
+        .get<string[]>('highlightColors', DEFAULT_PALETTE);
     decorationTypes = palette.map((color) =>
         vscode.window.createTextEditorDecorationType({
             backgroundColor: color,
@@ -29,7 +29,47 @@ function createDecorationTypes() {
     );
 }
 
-function activate(context) {
+function clearDecorations(): void {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) decorationTypes.forEach((d) => editor.setDecorations(d, []));
+}
+
+function highlightDuplicateLines(): void {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return;
+
+    const doc = editor.document;
+    const lineMap = new Map<string, number[]>();
+
+    for (let i = 0; i < doc.lineCount; i++) {
+        const text = doc.lineAt(i).text.trim();
+        if (!text) continue;
+        const indices = lineMap.get(text);
+        if (indices) indices.push(i);
+        else lineMap.set(text, [i]);
+    }
+
+    const groups: number[][] = [];
+    for (const indices of lineMap.values()) {
+        if (indices.length > 1) groups.push(indices);
+    }
+
+    const rangesByType: vscode.DecorationOptions[][] = decorationTypes.map(
+        () => [],
+    );
+    groups.forEach((indices, gi) => {
+        const typeIdx = gi % decorationTypes.length;
+        for (const i of indices) {
+            rangesByType[typeIdx].push({ range: doc.lineAt(i).range });
+        }
+    });
+
+    decorationTypes.forEach((d, i) =>
+        editor.setDecorations(d, rangesByType[i]),
+    );
+}
+
+export function activate(context: vscode.ExtensionContext): void {
     outputChannel = vscode.window.createOutputChannel(
         'Duplicate Line Highlighter',
     );
@@ -79,48 +119,7 @@ function activate(context) {
     );
 }
 
-function clearDecorations() {
-    const editor = vscode.window.activeTextEditor;
-    if (editor) decorationTypes.forEach((d) => editor.setDecorations(d, []));
-}
-
-function highlightDuplicateLines() {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) return;
-
-    const doc = editor.document;
-    const lineMap = new Map();
-
-    for (let i = 0; i < doc.lineCount; i++) {
-        const text = doc.lineAt(i).text.trim();
-        if (!text) continue;
-        const indices = lineMap.get(text);
-        if (indices) indices.push(i);
-        else lineMap.set(text, [i]);
-    }
-
-    const groups = [];
-    for (const indices of lineMap.values()) {
-        if (indices.length > 1) groups.push(indices);
-    }
-
-    // Build per-decoration-type range arrays
-    const rangesByType = decorationTypes.map(() => []);
-    groups.forEach((indices, gi) => {
-        const typeIdx = gi % decorationTypes.length;
-        for (const i of indices) {
-            rangesByType[typeIdx].push({ range: doc.lineAt(i).range });
-        }
-    });
-
-    decorationTypes.forEach((d, i) =>
-        editor.setDecorations(d, rangesByType[i]),
-    );
-}
-
-function deactivate() {
+export function deactivate(): void {
     clearTimeout(debounceTimer);
     decorationTypes.forEach((d) => d.dispose());
 }
-
-module.exports = { activate, deactivate };

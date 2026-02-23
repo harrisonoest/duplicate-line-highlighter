@@ -2,6 +2,12 @@
 
 All notable changes to "Duplicate Line Highlighter" will be documented in this file.
 
+## [1.0.1] - 2026-02-23
+
+### Added 
+
+- Converted Javascript to Typescript
+
 ## [1.0.0] - 2026-02-23
 
 ### Added
